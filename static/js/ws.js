@@ -8,6 +8,7 @@ WSSHClient.prototype._generateEndpoint = function () {
         var protocol = 'ws://';
     }
     var endpoint = protocol + window.location.host + '/ws';
+   // var endpoint = " ws://10.11.20.103:8888/enter" ;
     return endpoint;
 };
 
@@ -49,9 +50,8 @@ WSSHClient.prototype.sendInitData = function (options) {
         hostname: options.host,
         port: options.port,
         username: options.username,
-        ispwd: options.ispwd,
-        secret: options.secret
-    };
+        password: options.password
+    }
     this._connection.send(JSON.stringify({"tp": "init", "data": options}))
 }
 
