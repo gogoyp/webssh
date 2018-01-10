@@ -2,9 +2,25 @@ webssh
 ====================
 
 
-WebSSH is a simple web project which support login linux server with explorer.
+本次修改
+------------
 
-** ⚠ This project is no longer maintained and thank you for your support. ⚠
+在原有功能基础上增加了，连接docker容器内部的功能,连接容器内部用的是entry，通过代码中entry.py启动了一个后台的容器连接客户端
+在本工程webssh中添加了连接entry的功能
+
+调用模式：webssh<->entryclient<->docker容器内部
+
+
+entry 地址：https://github.com/laincloud/entry.git
+
+Entry应用。负责如下工作：
+    调用Docker Remote API
+    通过WebSocket 传递stdin，stdout和stderr。
+    根据protobuf3协议对各类消息进行序列化与反序列化。
+    
+-----------
+
+WebSSH is a simple web project which support login linux server with explorer.
 
 License: `MIT` (see LICENSE)
 
@@ -44,3 +60,5 @@ And now the webssh support `linux` `mac` and `windows` OS.
 Please let me know if you meet any other problems.
 
 Email:xsank#foxmail.com
+
+

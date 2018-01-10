@@ -8,7 +8,6 @@ from threading import Thread
 
 from utils import Platform
 
-
 MAX_DATA_BUFFER = 1024*1024
 
 
@@ -32,8 +31,7 @@ class IOLoop(Thread):
                 IOLoop._instance = EPollIOLoop()
             elif Platform.is_mac():
                 IOLoop._instance = KQueueIOLoop()
-            else:
-                IOLoop._instance = SelectIOLoop()
+
         return IOLoop._instance
 
     def register(self, bridge):
@@ -46,6 +44,7 @@ class IOLoop(Thread):
         fd = next(future)
         self.futures[fd] = future
         next(future)
+
 
     def close(self, fd):
         self.impl.unregister(fd)
@@ -69,7 +68,8 @@ class EPollIOLoop(IOLoop):
                 if select.EPOLLIN & events:
                     while True:
                         try:
-                            data = self.bridges[fd].shell.recv(MAX_DATA_BUFFER)
+                            #data = self.bridges[fd].shell.recv(MAX_DATA_BUFFER)
+                            data = self.bridges[fd].recv();
                         except socket.error as e:
                             if e.errno == errno.EAGAIN:
                                 self.impl.modify(fd, select.EPOLLET)
@@ -86,51 +86,6 @@ class EPollIOLoop(IOLoop):
                 else:
                     continue
 
-
-class SelectIOLoop(IOLoop):
-
-    def __init__(self):
-        super(SelectIOLoop, self).__init__(impl=select.select)
-        self.read_fds = set()
-        self.write_fds = set()
-        self.error_fds = set()
-        self.fd_sets = (self.read_fds, self.write_fds, self.error_fds)
-
-    def register(self, bridge):
-        self._add_bridge(bridge)
-        self.read_fds.add(bridge.id)
-
-    def run(self):
-        import time
-        while True:
-            if self.read_fds:
-                readable, writeable, errors = self.impl(
-                    self.read_fds, self.write_fds, self.error_fds, 1)
-                events = {}
-                for fd in readable:
-                    events[fd] = events.get(fd, 0) | self.READ
-                for fd in errors:
-                    events[fd] = events.get(fd, 0) | self.ERROR
-                for fd, events in events.items():
-                    if self.READ & events:
-                        while True:
-                            try:
-                                data = self.bridges[fd].shell.recv(MAX_DATA_BUFFER)
-                            except socket.error as e:
-                                if isinstance(e, socket.timeout):
-                                    break
-                                else:
-                                    self.close(fd)
-                            try:
-                                self.futures[fd].send(data)
-                            except StopIteration:
-                                break
-                    elif self.ERROR & events:
-                        self.close(fd)
-                    else:
-                        continue
-            else:
-                time.sleep(1)
 
 
 class KQueueIOLoop(IOLoop):
@@ -158,7 +113,8 @@ class KQueueIOLoop(IOLoop):
                 if select.KQ_FILTER_READ & events:
                     while True:
                         try:
-                            data = self.bridges[fd].shell.recv(MAX_DATA_BUFFER)
+                            #data = self.bridges[fd].shell.recv(MAX_DATA_BUFFER)
+                            data = self.bridges[fd].recv()
                         except socket.error as e:
                             if isinstance(e, socket.timeout):
                                 break
@@ -172,3 +128,5 @@ class KQueueIOLoop(IOLoop):
                     self.close(fd)
                 else:
                     continue
+
+
